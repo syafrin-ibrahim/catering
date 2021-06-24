@@ -20,8 +20,8 @@ import (
 
 func GetPaymentUrl(trans models.Transaction, user models.User) (string, error) {
 	midclient := midtrans.NewClient()
-	midclient.ServerKey = "SB-Mid-server-217kGZdahU203WWQgde1jBxB"
-	midclient.ClientKey = "SB-Mid-client-bQIgi-NpisnRZctv"
+	midclient.ServerKey = ""
+	midclient.ClientKey = ""
 	midclient.APIEnvType = midtrans.Sandbox
 
 	snapGateway := midtrans.SnapGateway{
