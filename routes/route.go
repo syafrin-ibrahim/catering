@@ -1,24 +1,102 @@
 package routes
 
 import (
+	"catering/config"
 	"catering/controllers"
+	"catering/middleware"
+	"catering/models"
+	"net/http"
+	"strings"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	// "github.com/labstack/echo/middleware"
 	// "github.com/labstack/echo/v4"
 )
 
+func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(e echo.Context) error {
+		hToken := e.Request().Header.Get("Authorization")
+
+		var tokenString string
+		arrayToken := strings.Split(hToken, " ")
+		if len(arrayToken) == 2 {
+			tokenString = arrayToken[1]
+		}
+
+		token, err := middleware.ValidateToken(tokenString)
+
+		if err != nil {
+			return e.JSON(http.StatusUnauthorized, map[string]interface{}{
+				"status":  http.StatusUnauthorized,
+				"message": err.Error(),
+			})
+		}
+
+		claim, ok := token.Claims.(jwt.MapClaims)
+
+		if !ok || !token.Valid {
+			return e.JSON(http.StatusUnauthorized, map[string]interface{}{
+				"status":  http.StatusUnauthorized,
+				"message": err.Error(),
+			})
+		}
+
+		userId := int(claim["user_id"].(float64))
+		user := models.User{}
+		errors := config.DB.Where("id=?", userId).First(&userId).Error
+
+		if errors != nil {
+			return e.JSON(http.StatusUnauthorized, map[string]interface{}{
+				"status":  http.StatusUnauthorized,
+				"message": err.Error(),
+			})
+		}
+
+		e.Set("currentUser", user)
+
+		return next(e)
+	}
+}
+
 func Init() *echo.Echo {
 	e := echo.New()
-	auth := e.Group("/")
-	auth.POST("regency", controllers.CreateRegency)
-	auth.GET("regency", controllers.GetRegency)
-	auth.POST("paket", controllers.CreatePaket)
-	auth.GET("paket", controllers.GetPakets)
-	auth.POST("user", controllers.CreateUser)
-	auth.GET("user", controllers.GetUsers)
-	auth.POST("transaction", controllers.CreateTransaction)
-	// auth.POST("registrasi", controllers.Registrasi)
+	route := e.Group("/")
+
+	route.POST("image", controllers.CreateImage)
+	route.DELETE("image/:id", controllers.DeleteImage)
+
+	route.POST("category", controllers.CreateCategory)
+	route.GET("categories", controllers.GetCategories)
+	route.GET("category/:id", controllers.ShowCategory)
+	route.PUT("category/:id", controllers.UpdateCategory)
+	route.DELETE("category/:id", controllers.DeleteCategory)
+
+	route.POST("regency", controllers.CreateRegency)
+	route.GET("regencies", controllers.GetRegency)
+	route.GET("regency/:id", controllers.ShowRegency)
+	route.PUT("regency/:id", controllers.UpdateRegency)
+	route.DELETE("regency/:id", controllers.DeleteRegency)
+
+	route.POST("paket", controllers.CreatePaket)
+	route.GET("pakets", controllers.GetPakets)
+	route.GET("paket/:id", controllers.ShowPaket)
+	route.PUT("paket/:id", controllers.UpdatePaket)
+	route.DELETE("paket/:id", controllers.DeletePaket)
+
+	route.POST("user", controllers.CreateUser)
+	route.GET("users", controllers.GetUsers)
+	route.GET("user/:id", controllers.ShowUser)
+	route.PUT("user/:id", controllers.UpdateUser)
+	route.DELETE("user/:id", controllers.DeleteUser)
+
+	route.POST("transaction", controllers.CreateTransaction)
+	route.GET("transactions", controllers.GetTransaction)
+	route.GET("transactions/user", controllers.GetTransactionByUserId)
+	route.POST("transaction/notif", controllers.GetNotification)
+
+	route.POST("registrasi", controllers.Registration)
+	route.POST("login", controllers.Login)
 
 	// admin := e.Group("/")
 	// admin.Use(middleware.JWTWithConfig(middleware.JWTConfig{

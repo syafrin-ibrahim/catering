@@ -20,8 +20,8 @@ import (
 
 func GetPaymentUrl(trans models.Transaction, user models.User) (string, error) {
 	midclient := midtrans.NewClient()
-	midclient.ServerKey = ""
-	midclient.ClientKey = ""
+	midclient.ServerKey = "SB-Mid-server-217kGZdahU203WWQgde1jBxB"
+	midclient.ClientKey = "SB-Mid-client-bQIgi-NpisnRZctv"
 	midclient.APIEnvType = midtrans.Sandbox
 
 	snapGateway := midtrans.SnapGateway{
@@ -41,7 +41,7 @@ func GetPaymentUrl(trans models.Transaction, user models.User) (string, error) {
 
 	respon, err := snapGateway.GetToken(snapReq)
 	if err != nil {
-		return "", err
+		return "something wrong guysss.... midtrans, error get token", err
 	}
 
 	return respon.RedirectURL, nil

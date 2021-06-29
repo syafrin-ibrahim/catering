@@ -21,9 +21,11 @@ func Init() {
 		log.Println("Connection Success")
 	}
 
-	DB.AutoMigrate(&models.User{}, &models.Regency{}, &models.Transaction{}, &models.Paket{})
-	DB.Model(&models.Transaction{}).AddForeignKey("regency_id", "regencies(id)", "CASCADE", "CASCADE")
-	DB.Model(&models.Transaction{}).AddForeignKey("paket_id", "pakets(id)", "CASCADE", "CASCADE")
-	DB.Model(&models.Transaction{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	DB.AutoMigrate(&models.User{}, &models.Regency{}, &models.Transaction{}, &models.Paket{}, &models.Category{}, &models.Image{})
+	// DB.Model(&models.Paket{}).AddForeignKey("category_id", "categories(id)", "CASCADE", "CASCADE")
+	// DB.Model(&models.Image{}).AddForeignKey("paket_id", "pakets(id)", "CASCADE", "CASCADE")
+	// DB.Model(&models.Transaction{}).AddForeignKey("regency_id", "regencies(id)", "CASCADE", "CASCADE")
+	// DB.Model(&models.Transaction{}).AddForeignKey("paket_id", "pakets(id)", "CASCADE", "CASCADE")
+	// DB.Model(&models.Transaction{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
 
 }

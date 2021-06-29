@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"catering/config"
+	"catering/helpers"
 	"catering/models"
 	"net/http"
 	"strconv"
@@ -10,8 +11,14 @@ import (
 )
 
 func GetPakets(e echo.Context) error {
-	var Pakets []models.Paket
-	err := config.DB.Find(&Pakets).Error
+	var pakets []models.Paket
+	//err := config.DB.Find(&pakets).Error
+	err := config.DB.Preload("Image", "images.is_main=1").Find(&pakets).Error
+	if err != nil {
+		return e.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"message": err.Error(),
+		})
+	}
 
 	if err != nil {
 		return e.JSON(http.StatusInternalServerError, map[string]interface{}{
@@ -19,18 +26,29 @@ func GetPakets(e echo.Context) error {
 		})
 	}
 
-	return e.JSON(http.StatusOK, map[string]interface{}{
-		"status":  http.StatusOK,
-		"message": "success",
-		"data":    Pakets,
-	})
+	var formatPaketResponse []models.PaketResponse
+	for _, paket := range pakets {
+		paketResponse := models.PaketResponse{
+			ID:          paket.ID,
+			Name:        paket.Name,
+			Description: paket.Description,
+			Price:       paket.Price,
+			Discount:    paket.Discount,
+			Image:       paket.Image[0].FileName,
+		}
+
+		formatPaketResponse = append(formatPaketResponse, paketResponse)
+	}
+
+	response := helpers.Apiresponse("list of paket", http.StatusOK, "success", formatPaketResponse)
+	return e.JSON(http.StatusOK, response)
 
 }
 
 func CreatePaket(e echo.Context) error {
-	Paket := models.Paket{}
-	e.Bind(&Paket)
-	err := config.DB.Save(&Paket).Error
+	paket := models.Paket{}
+	e.Bind(&paket)
+	err := config.DB.Save(&paket).Error
 
 	if err != nil {
 		return e.JSON(http.StatusInternalServerError, map[string]interface{}{
@@ -38,18 +56,15 @@ func CreatePaket(e echo.Context) error {
 		})
 	}
 
-	return e.JSON(http.StatusOK, map[string]interface{}{
-		"status":  http.StatusOK,
-		"message": "Paket created",
-		"data":    Paket,
-	})
+	response := helpers.Apiresponse("paket created", http.StatusOK, "success", paket)
+	return e.JSON(http.StatusOK, response)
 }
 
 func ShowPaket(e echo.Context) error {
 
-	Paket := models.Paket{}
+	paket := models.Paket{}
 	id, _ := strconv.Atoi(e.Param("id"))
-	err := config.DB.Find(&Paket, id).Error
+	err := config.DB.Find(&paket, id).Error
 
 	if err != nil {
 		return e.JSON(http.StatusInternalServerError, map[string]interface{}{
@@ -57,48 +72,49 @@ func ShowPaket(e echo.Context) error {
 		})
 	}
 
-	return e.JSON(http.StatusOK, map[string]interface{}{
-		"status":  http.StatusOK,
-		"message": "Paket found",
-		"data":    Paket,
-	})
+	response := helpers.Apiresponse("paket found", http.StatusOK, "success", paket)
+	return e.JSON(http.StatusOK, response)
 }
 
 func UpdatePaket(e echo.Context) error {
 
-	Paket := models.Paket{}
+	paket := models.Paket{}
 	id, _ := strconv.Atoi(e.Param("id"))
-	err := config.DB.Find(&Paket, id).Error
-	e.Bind(&Paket)
-	config.DB.Save(&Paket)
+	err := config.DB.Find(&paket, id).Error
+	e.Bind(&paket)
+	config.DB.Save(&paket)
 	if err != nil {
 		return e.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"message": err.Error(),
 		})
 	}
 
-	return e.JSON(http.StatusOK, map[string]interface{}{
-		"status":  http.StatusOK,
-		"message": "Paket updated",
-		"data":    Paket,
-	})
+	response := helpers.Apiresponse("paket updated", http.StatusOK, "success", paket)
+	return e.JSON(http.StatusOK, response)
 }
 
 func DeletePaket(e echo.Context) error {
 
-	Paket := models.Paket{}
+	paket := models.Paket{}
 	id, _ := strconv.Atoi(e.Param("id"))
-	err := config.DB.Table("Pakets").Where("id=?", id).Delete(&Paket).Error
-
+	err := config.DB.Where("id=?", id).Find(&paket).Error
+	config.DB.Delete(&paket)
 	if err != nil {
 		return e.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"message": err.Error(),
 		})
 	}
 
-	return e.JSON(http.StatusOK, map[string]interface{}{
-		"status":  http.StatusOK,
-		"message": "Paket Deleted",
-		"data":    Paket,
-	})
+	response := helpers.Apiresponse("paket deleted", http.StatusOK, "success", paket)
+	return e.JSON(http.StatusOK, response)
+}
+
+func FindCategory(id int) (models.Category, error) {
+	var category models.Category
+	err := config.DB.Where("id=?", id).Find(&category).Error
+	if err != nil {
+		return category, nil
+	}
+
+	return category, nil
 }
