@@ -64,7 +64,7 @@ func ShowPaket(e echo.Context) error {
 
 	paket := models.Paket{}
 	id, _ := strconv.Atoi(e.Param("id"))
-	err := config.DB.Find(&paket, id).Error
+	err := config.DB.Preload("Image").Find(&paket, id).Error
 
 	if err != nil {
 		return e.JSON(http.StatusInternalServerError, map[string]interface{}{
@@ -72,7 +72,20 @@ func ShowPaket(e echo.Context) error {
 		})
 	}
 
-	response := helpers.Apiresponse("paket found", http.StatusOK, "success", paket)
+	// var paketIma []models.PaketResponse
+
+	// for _, image := range models.ImageResponse{
+
+	// }
+	paketResponse := models.DetailPaketResponse{
+		ID:          paket.ID,
+		Name:        paket.Name,
+		Price:       paket.Price,
+		Description: paket.Description,
+		Discount:    paket.Discount,
+		Image:       paket.Image,
+	}
+	response := helpers.Apiresponse("paket "+paket.Name, http.StatusOK, "success", paketResponse)
 	return e.JSON(http.StatusOK, response)
 }
 
